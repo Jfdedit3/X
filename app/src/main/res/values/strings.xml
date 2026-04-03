@@ -2,4 +2,5 @@
 <resources>
     <string name="app_name">X</string>
     <string name="intro_text">Loading timeline</string>
+    <string name="file_chooser_title">Select media</string>
 </resources>

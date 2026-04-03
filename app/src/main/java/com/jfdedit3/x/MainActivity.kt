@@ -3,6 +3,7 @@ package com.jfdedit3.x
 import android.animation.Animator
 import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
+import android.app.Activity
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
@@ -10,12 +11,14 @@ import android.os.Bundle
 import android.view.View
 import android.view.animation.AccelerateDecelerateInterpolator
 import android.webkit.CookieManager
+import android.webkit.ValueCallback
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
 import android.webkit.WebSettings
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import androidx.activity.OnBackPressedCallback
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
 import androidx.core.view.WindowInsetsCompat
@@ -24,6 +27,7 @@ import com.jfdedit3.x.databinding.ActivityMainBinding
 
 class MainActivity : AppCompatActivity() {
     private lateinit var binding: ActivityMainBinding
+    private var filePathCallback: ValueCallback<Array<Uri>>? = null
     private val allowedHosts = setOf(
         "x.com",
         "www.x.com",
@@ -32,6 +36,25 @@ class MainActivity : AppCompatActivity() {
         "mobile.twitter.com",
         "t.co"
     )
+
+    private val fileChooserLauncher = registerForActivityResult(ActivityResultContracts.StartActivityForResult()) { result ->
+        val callback = filePathCallback
+        if (callback == null) return@registerForActivityResult
+
+        val results = when {
+            result.resultCode != Activity.RESULT_OK -> null
+            result.data == null -> null
+            result.data?.clipData != null -> {
+                val clipData = result.data?.clipData ?: return@registerForActivityResult
+                Array(clipData.itemCount) { index -> clipData.getItemAt(index).uri }
+            }
+            result.data?.data != null -> arrayOf(result.data!!.data!!)
+            else -> WebChromeClient.FileChooserParams.parseResult(result.resultCode, result.data)
+        }
+
+        callback.onReceiveValue(results)
+        filePathCallback = null
+    }
 
     @SuppressLint("SetJavaScriptEnabled")
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -51,15 +74,48 @@ class MainActivity : AppCompatActivity() {
             settings.loadsImagesAutomatically = true
             settings.useWideViewPort = true
             settings.loadWithOverviewMode = true
+            settings.allowFileAccess = true
+            settings.allowContentAccess = true
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
             settings.cacheMode = WebSettings.LOAD_DEFAULT
             settings.mediaPlaybackRequiresUserGesture = false
-            settings.userAgentString = settings.userAgentString + " XAndroidWrapper/1.2"
+            settings.userAgentString = settings.userAgentString + " XAndroidWrapper/1.3"
 
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
 
-            webChromeClient = WebChromeClient()
+            webChromeClient = object : WebChromeClient() {
+                override fun onShowFileChooser(
+                    webView: WebView?,
+                    filePathCallback: ValueCallback<Array<Uri>>?,
+                    fileChooserParams: FileChooserParams?
+                ): Boolean {
+                    this@MainActivity.filePathCallback?.onReceiveValue(null)
+                    this@MainActivity.filePathCallback = filePathCallback
+
+                    return try {
+                        val intent = fileChooserParams?.createIntent()?.apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            putExtra(Intent.EXTRA_ALLOW_MULTIPLE, fileChooserParams.mode == FileChooserParams.MODE_OPEN_MULTIPLE)
+                            if (type.isNullOrBlank() || type == "*/*") {
+                                type = "*/*"
+                                putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+                            }
+                        } ?: Intent(Intent.ACTION_GET_CONTENT).apply {
+                            addCategory(Intent.CATEGORY_OPENABLE)
+                            type = "*/*"
+                            putExtra(Intent.EXTRA_MIME_TYPES, arrayOf("image/*", "video/*"))
+                        }
+
+                        fileChooserLauncher.launch(Intent.createChooser(intent, getString(R.string.file_chooser_title)))
+                        true
+                    } catch (_: ActivityNotFoundException) {
+                        this@MainActivity.filePathCallback = null
+                        false
+                    }
+                }
+            }
+
             webViewClient = object : WebViewClient() {
                 override fun onPageFinished(view: WebView?, url: String?) {
                     super.onPageFinished(view, url)
@@ -121,6 +177,12 @@ class MainActivity : AppCompatActivity() {
         super.onResume()
         binding.swipeRefresh.isRefreshing = false
         enterFullscreen()
+    }
+
+    override fun onDestroy() {
+        filePathCallback?.onReceiveValue(null)
+        filePathCallback = null
+        super.onDestroy()
     }
 
     override fun onSaveInstanceState(outState: Bundle) {
