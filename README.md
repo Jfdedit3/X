@@ -9,6 +9,7 @@ Application Android minimale en Kotlin qui affiche uniquement X (x.com / twitter
 - limitation aux domaines X / Twitter / t.co
 - liens externes ouverts hors de l'application
 - retour Android géré dans l'historique WebView
+- interface réellement en plein écran
 - workflow GitHub Actions pour compiler un APK debug
 
 ## Build local

@@ -7,7 +7,13 @@
     <path
         android:fillColor="#000000"
         android:pathData="M0,0h108v108h-108z" />
-    <path
-        android:fillColor="#FFFFFF"
-        android:pathData="M68.52,22h12.14L54.13,52.33L85.33,86H60.9L41.77,65.57L23.88,86H11.73L40.11,53.56L10.17,22h25.04l17.28,18.6L68.52,22zM64.26,78.72h6.73L31.57,28.89h-7.22L64.26,78.72z" />
+    <group
+        android:pivotX="54"
+        android:pivotY="54"
+        android:scaleX="0.82"
+        android:scaleY="0.82">
+        <path
+            android:fillColor="#FFFFFF"
+            android:pathData="M74.26,18H88L57.96,52.33L92.78,90H65.49L44.13,67.07L24.02,90H10.24L42.54,53.08L9.22,18H37.2L56.08,38.29L74.26,18Z" />
+    </group>
 </vector>

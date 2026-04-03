@@ -4,14 +4,11 @@
     android:height="108dp"
     android:viewportWidth="108"
     android:viewportHeight="108">
-    <path
-        android:fillColor="#000000"
-        android:pathData="M54,0A54,54 0 1,1 54,108A54,54 0 1,1 54,0" />
     <group
         android:pivotX="54"
         android:pivotY="54"
-        android:scaleX="0.72"
-        android:scaleY="0.72">
+        android:scaleX="0.82"
+        android:scaleY="0.82">
         <path
             android:fillColor="#FFFFFF"
             android:pathData="M74.26,18H88L57.96,52.33L92.78,90H65.49L44.13,67.07L24.02,90H10.24L42.54,53.08L9.22,18H37.2L56.08,38.29L74.26,18Z" />
