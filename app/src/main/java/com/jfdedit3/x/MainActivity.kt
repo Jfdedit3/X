@@ -1,11 +1,14 @@
 package com.jfdedit3.x
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
 import android.annotation.SuppressLint
 import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.webkit.CookieManager
 import android.webkit.WebChromeClient
 import android.webkit.WebResourceRequest
@@ -37,9 +40,11 @@ class MainActivity : AppCompatActivity() {
         binding = ActivityMainBinding.inflate(layoutInflater)
         setContentView(binding.root)
         enterFullscreen()
+        setupIntro()
 
         with(binding.webView) {
             overScrollMode = View.OVER_SCROLL_NEVER
+            alpha = 0f
             settings.javaScriptEnabled = true
             settings.domStorageEnabled = true
             settings.databaseEnabled = true
@@ -49,13 +54,22 @@ class MainActivity : AppCompatActivity() {
             settings.mixedContentMode = WebSettings.MIXED_CONTENT_COMPATIBILITY_MODE
             settings.cacheMode = WebSettings.LOAD_DEFAULT
             settings.mediaPlaybackRequiresUserGesture = false
-            settings.userAgentString = settings.userAgentString + " XAndroidWrapper/1.1"
+            settings.userAgentString = settings.userAgentString + " XAndroidWrapper/1.2"
 
             CookieManager.getInstance().setAcceptCookie(true)
             CookieManager.getInstance().setAcceptThirdPartyCookies(this, true)
 
             webChromeClient = WebChromeClient()
             webViewClient = object : WebViewClient() {
+                override fun onPageFinished(view: WebView?, url: String?) {
+                    super.onPageFinished(view, url)
+                    if (binding.introOverlay.visibility == View.VISIBLE) {
+                        playIntroExit()
+                    } else {
+                        binding.webView.animate().alpha(1f).setDuration(220).start()
+                    }
+                }
+
                 override fun shouldOverrideUrlLoading(view: WebView?, request: WebResourceRequest?): Boolean {
                     val uri = request?.url ?: return false
                     return if (isAllowed(uri)) {
@@ -83,6 +97,8 @@ class MainActivity : AppCompatActivity() {
             binding.webView.loadUrl("https://x.com")
         } else {
             binding.webView.restoreState(savedInstanceState)
+            binding.webView.alpha = 1f
+            binding.introOverlay.visibility = View.GONE
         }
 
         onBackPressedDispatcher.addCallback(this, object : OnBackPressedCallback(true) {
@@ -110,6 +126,65 @@ class MainActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         binding.webView.saveState(outState)
+    }
+
+    private fun setupIntro() {
+        binding.introOverlay.alpha = 1f
+        binding.introLogo.alpha = 0f
+        binding.introLogo.scaleX = 0.72f
+        binding.introLogo.scaleY = 0.72f
+        binding.introLogo.translationY = 36f
+        binding.introSubtitle.alpha = 0f
+        binding.introSubtitle.translationY = 24f
+
+        binding.introLogo.animate()
+            .alpha(1f)
+            .scaleX(1f)
+            .scaleY(1f)
+            .translationY(0f)
+            .setStartDelay(120)
+            .setDuration(650)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
+
+        binding.introSubtitle.animate()
+            .alpha(1f)
+            .translationY(0f)
+            .setStartDelay(300)
+            .setDuration(500)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
+    }
+
+    private fun playIntroExit() {
+        binding.webView.animate()
+            .alpha(1f)
+            .setDuration(260)
+            .start()
+
+        binding.introContent.animate()
+            .alpha(0f)
+            .scaleX(1.06f)
+            .scaleY(1.06f)
+            .setDuration(280)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .start()
+
+        binding.introOverlay.animate()
+            .alpha(0f)
+            .setStartDelay(120)
+            .setDuration(360)
+            .setInterpolator(AccelerateDecelerateInterpolator())
+            .setListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    binding.introOverlay.visibility = View.GONE
+                    binding.introOverlay.alpha = 1f
+                    binding.introContent.alpha = 1f
+                    binding.introContent.scaleX = 1f
+                    binding.introContent.scaleY = 1f
+                }
+            })
+            .start()
     }
 
     private fun enterFullscreen() {
