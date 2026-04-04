@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">X Rebuild</string>
+    <string name="settings">Settings</string>
+    <string name="back">Back</string>
+    <string name="forward">Forward</string>
+    <string name="reload">Reload</string>
+    <string name="home">Home</string>
+    <string name="enable_javascript">Enable JavaScript</string>
+    <string name="enable_dom_storage">Enable DOM Storage</string>
+    <string name="desktop_mode">Desktop mode</string>
+    <string name="load_images">Load images automatically</string>
+    <string name="media_playback_without_gesture">Media playback without gesture</string>
+    <string name="force_dark_webview">Force dark WebView</string>
+    <string name="home_url">Home URL</string>
+    <string name="save_settings">Save settings</string>
+    <string name="clear_cache">Clear WebView cache</string>
+    <string name="clear_cookies">Clear cookies</string>
+    <string name="open_x_now">Open X now</string>
+</resources>
